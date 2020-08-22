@@ -7,11 +7,11 @@ import asyncio
 import tweepy
 load_dotenv()
 
-weather_key = os.getenv("WEATHER_KEY")
-twitter_consumer_key = os.getenv("TWITTER_KEY")
-twitter_consumer_secret = os.getenv("TWITTER_SECRET")
-twitter_access_token = os.getenv("TWITTER_ACCESS_TOKEN")
-twitter_access_token_secret = os.getenv("TWITTER_ACCESS_TOKEN_SECRET")
+weather_key = os.environ.get("WEATHER_KEY")
+twitter_consumer_key = os.environ.get("TWITTER_KEY")
+twitter_consumer_secret = os.environ.get("TWITTER_SECRET")
+twitter_access_token = os.environ.get("TWITTER_ACCESS_TOKEN")
+twitter_access_token_secret = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET")
 
 auth = tweepy.OAuthHandler(twitter_consumer_key, twitter_consumer_secret)
 auth.set_access_token(twitter_access_token, twitter_access_token_secret)
