@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import os
 import asyncio
 import tweepy
+import time
 load_dotenv()
 
 weather_key = os.environ.get("WEATHER_KEY")
@@ -26,7 +27,7 @@ countries_list = None
 with open('data/countries.json', encoding='utf-8') as countries:
     countries_list = json.load(countries)
 
-async def work():
+while True:
     def get_potential_rainy_cities():
         cities = []
         for x in range(20):
@@ -43,7 +44,17 @@ async def work():
             return True
         if weather_code_first_digit == '3':
             return True
-        if weather_code_first_digit == '2':
+        if weather_code == '200':
+            return True
+        if weather_code == '201':
+            return True
+        if weather_code == '202':
+            return True
+        if weather_code == '230':
+            return True
+        if weather_code == '231':
+            return True
+        if weather_code == '232':
             return True
         return False
     
@@ -53,7 +64,7 @@ async def work():
     while found_potential_rainy_cities is False:
         if times_looked >= 3:
             print("cannot find any rainy cities... will look again.")
-            await asyncio.sleep(60)#To not annoy the API
+            time.sleep(60)#To not annoy the API
             times_looked = 0
         where_its_raining = list(filter(is_it_raining, get_potential_rainy_cities()))
         times_looked += 1
@@ -64,14 +75,4 @@ async def work():
 
 
     api.update_status(f'It\'s raining in {rainy_city["name"]}, {countries_list[rainy_city["sys"]["country"]]}. https://www.youtube.com/watch?v=zNd4apsr3WE')
-    await asyncio.sleep(3600)
-
-loop = asyncio.get_event_loop()
-try:
-    asyncio.ensure_future(work())
-    loop.run_forever()
-except KeyboardInterrupt:
-    pass
-finally:
-    print("Closing Loop")
-    loop.close()
+    time.sleep(3600)
