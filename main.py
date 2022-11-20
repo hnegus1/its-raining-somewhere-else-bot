@@ -8,6 +8,17 @@ import tweepy
 import time
 load_dotenv()
 
+def mastodon(toot):
+    access_token = os.environ.get("MASTODON_ACCESS_TOKEN")
+
+    post_url = f'https://mastodon.videogamesarebad.co.uk/api/v1/statuses'
+    post_response = requests.post(
+        post_url, 
+        headers={"Authorization": f"Bearer {access_token}"}, 
+        data={"status": toot}
+    )
+
+
 def run():
     weather_key = os.environ.get("WEATHER_KEY")
     twitter_consumer_key = os.environ.get("TWITTER_KEY")
@@ -74,9 +85,12 @@ def run():
 
         rainy_city = where_its_raining[0]
 
-
-        api.update_status(f'It\'s raining in {rainy_city["name"]}, {countries_list[rainy_city["sys"]["country"]]}. https://www.youtube.com/watch?v=zNd4apsr3WE')
+        post = f'It\'s raining in {rainy_city["name"]}, {countries_list[rainy_city["sys"]["country"]]}. https://www.youtube.com/watch?v=zNd4apsr3WE'
+        api.update_status(post)
+        mastodon(post)
         time.sleep(3600)
 
+
+
 if __name__ == "__main__":
-    run()
+   run()
