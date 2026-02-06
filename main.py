@@ -3,33 +3,16 @@ import requests
 import random
 from dotenv import load_dotenv
 import os
-import asyncio
-import tweepy
+from blueskysocial import Client, Post, WebCard
 import time
 load_dotenv()
 
-def mastodon(toot):
-    access_token = os.environ.get("MASTODON_ACCESS_TOKEN")
-
-    post_url = f'https://mastodon.videogamesarebad.co.uk/api/v1/statuses'
-    post_response = requests.post(
-        post_url, 
-        headers={"Authorization": f"Bearer {access_token}"}, 
-        data={"status": toot}
-    )
-
-
 def run():
-    weather_key = os.environ.get("WEATHER_KEY")
-    twitter_consumer_key = os.environ.get("TWITTER_KEY")
-    twitter_consumer_secret = os.environ.get("TWITTER_SECRET")
-    twitter_access_token = os.environ.get("TWITTER_ACCESS_TOKEN")
-    twitter_access_token_secret = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET")
+    bsky_user = os.environ.get("BSKY_USER")
+    bsky_pass = os.environ.get("BSKY_PASS")
 
-    auth = tweepy.OAuthHandler(twitter_consumer_key, twitter_consumer_secret)
-    auth.set_access_token(twitter_access_token, twitter_access_token_secret)
-
-    api = tweepy.API(auth)
+    client = Client()
+    client.authenticate(bsky_user, bsky_pass)
 
     data = None
     with open('data/city.list.json', encoding='utf-8') as cities:
@@ -40,35 +23,22 @@ def run():
         countries_list = json.load(countries)
 
     while True:
-        def get_potential_rainy_cities():
+        def get_random_cities():
             cities = []
             for x in range(20):
                 cities.append(data[random.randrange(0, len(data) - 1)]) 
 
-            url = f'http://api.openweathermap.org/data/2.5/group?id={",".join(map(lambda city: str(city["id"]), cities))}&units=metric&appid={weather_key}'
+            return cities
+
+
+        def get_potential_rainy_cities(cities):      
+            url = f'https://api.open-meteo.com/v1/forecast?latitude={",".join(map(lambda city: str(city["coord"]["lat"]), cities))}&longitude={",".join(map(lambda city: str(city["coord"]["lon"]), cities))}&current=rain&forecast_days=0'
             response = requests.get(url)
-            return response.json()['list']
+            return response.json()
 
         def is_it_raining(weather):
-            weather_code = str(weather['weather'][0]['id'])
-            weather_code_first_digit = weather_code[0]
-            if weather_code_first_digit == '5':
-                return True
-            if weather_code_first_digit == '3':
-                return True
-            if weather_code == '200':
-                return True
-            if weather_code == '201':
-                return True
-            if weather_code == '202':
-                return True
-            if weather_code == '230':
-                return True
-            if weather_code == '231':
-                return True
-            if weather_code == '232':
-                return True
-            return False
+            return weather["rain"] > 0.00
+        
         
         found_potential_rainy_cities = False
         times_looked = 0
@@ -78,16 +48,23 @@ def run():
                 print("cannot find any rainy cities... will look again.")
                 time.sleep(60)#To not annoy the API
                 times_looked = 0
-            where_its_raining = list(filter(is_it_raining, get_potential_rainy_cities()))
+            
+            random_cities = get_random_cities()
+            weather_result = get_potential_rainy_cities(random_cities)
+
+            for i, r in enumerate(weather_result):
+                random_cities[i]["rain"] = r["current"]["rain"]
+
+            where_its_raining = list(filter(is_it_raining, random_cities))
             times_looked += 1
             if len(where_its_raining) > 0:
                 found_potential_rainy_cities = True
 
         rainy_city = where_its_raining[0]
 
-        post = f'It\'s raining in {rainy_city["name"]}, {countries_list[rainy_city["sys"]["country"]]}. https://www.youtube.com/watch?v=zNd4apsr3WE'
-        api.update_status(post)
-        mastodon(post)
+        post = f'It\'s raining in {rainy_city["name"]}, {countries_list[rainy_city["country"]]}.'
+        bskypost = Post(post, with_attachments=WebCard('https://www.youtube.com/watch?v=KtC-pl9P3kE'))
+        client.post(bskypost);
         time.sleep(3600)
 
 
