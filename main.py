@@ -64,7 +64,7 @@ def run():
 
         post = f'It\'s raining in {rainy_city["name"]}, {countries_list[rainy_city["country"]]}.'
         bskypost = Post(post, with_attachments=WebCard('https://www.youtube.com/watch?v=KtC-pl9P3kE'))
-        client.post(bskypost);
+        client.post(bskypost)
         time.sleep(3600)
 
 
